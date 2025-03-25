@@ -22,7 +22,7 @@ builds:
       RUBY_VERSION: 3.2.7
     name: Ruby 3.2.7
     script:
-      - bundle exec appraisal "ruby 2" rspec
+      - bundle exec appraisal "ruby 3" rspec
   build_2:
     environment:
       BUNDLE_GEMFILE: /home/build/project/gemfiles/ruby_3.gemfile
