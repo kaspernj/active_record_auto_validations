@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name        = "active_record_auto_validations"
   spec.version     = ActiveRecordAutoValidations::VERSION
   spec.authors     = ["kaspernj"]
-  spec.email       = ["k@spernj.org"]
+  spec.email       = ["kasper@diestoeckels.de"]
   spec.homepage    = "https://github.com/kaspernj/active_record_auto_validations"
   spec.summary     = "Scans ActiveRecord models and adds automatic validations based on null, max length etc."
   spec.description = "Scans ActiveRecord models and adds automatic validations based on null, max length etc."

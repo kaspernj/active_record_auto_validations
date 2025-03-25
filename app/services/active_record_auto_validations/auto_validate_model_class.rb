@@ -61,7 +61,8 @@ class ActiveRecordAutoValidations::AutoValidateModelClass
     columns.each do |column|
       next if ignore_column?(column.name)
 
-      auto_validate_pesence_on_column!(column) if auto_validate_presence_on_column?(column)
+      auto_validate_boolean_inclusion_on_column!(column) if auto_validate_boolean_inclusion_on_column?(column)
+      auto_validate_presence_on_column!(column) if auto_validate_presence_on_column?(column)
       auto_validate_max_length_on_column!(column) if auto_validate_max_length_on_column?(column)
     end
   end
@@ -83,6 +84,14 @@ class ActiveRecordAutoValidations::AutoValidateModelClass
     end
   end
 
+  def boolean_inclusion_validation_exists_on_column?(column)
+    model_class.validators_on(column.name.to_sym).each do |validator|
+      return true if validator.kind == :inclusion
+    end
+
+    false
+  end
+
   def presence_validation_exists_on_column?(column)
     model_class.validators_on(column.name.to_sym).each do |validator|
       return true if validator.kind == :presence
@@ -91,11 +100,30 @@ class ActiveRecordAutoValidations::AutoValidateModelClass
     false
   end
 
-  def auto_validate_presence_on_column?(column)
-    !column.null && !column.name.end_with?("_id") && column.default.nil? && column.default_function.nil? && !presence_validation_exists_on_column?(column)
+  def auto_validate_boolean_inclusion_on_column?(column)
+    column.type == :boolean &&
+      !column.null &&
+      !column.name.end_with?("_id") &&
+      column.default.nil? &&
+      column.default_function.nil? &&
+      !boolean_inclusion_validation_exists_on_column?(column)
   end
 
-  def auto_validate_pesence_on_column!(column)
+  def auto_validate_presence_on_column?(column)
+    column.type != :boolean &&
+      !column.null &&
+      !column.name.end_with?("_id") &&
+      column.default.nil? &&
+      column.default_function.nil? &&
+      !presence_validation_exists_on_column?(column)
+  end
+
+  def auto_validate_boolean_inclusion_on_column!(column)
+    Rails.logger.info { "AutoValidate: Adding boolean inclusion validation to #{model_class.table_name}##{column.name}" }
+    model_class.validates column.name.to_sym, inclusion: {in: [true, false]}
+  end
+
+  def auto_validate_presence_on_column!(column)
     Rails.logger.info { "AutoValidate: Adding presence validation to #{model_class.table_name}##{column.name}" }
     model_class.validates column.name.to_sym, presence: true
   end

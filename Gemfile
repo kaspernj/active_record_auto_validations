@@ -4,13 +4,13 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 gemspec
 
 gem "sprockets-rails"
-gem "sqlite3", "1.7.3"
+gem "sqlite3", "2.6.0"
 
 group :development do
   gem "appraisal"
   gem "dotenv-rails"
   gem "mysql2"
-  gem "nokogiri", "1.17.2"
+  gem "nokogiri", "1.18.6"
   gem "pry-rails"
   gem "rspec-rails"
   gem "rubocop"
