@@ -120,7 +120,7 @@ class ActiveRecordAutoValidations::AutoValidateModelClass
 
   def auto_validate_boolean_inclusion_on_column!(column)
     Rails.logger.info { "AutoValidate: Adding boolean inclusion validation to #{model_class.table_name}##{column.name}" }
-    model_class.validates column.name.to_sym, inclusion: { in: [true, false] }
+    model_class.validates column.name.to_sym, inclusion: {in: [true, false]}
   end
 
   def auto_validate_presence_on_column!(column)
