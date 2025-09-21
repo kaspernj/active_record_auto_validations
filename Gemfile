@@ -4,7 +4,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 gemspec
 
 gem "sprockets-rails"
-gem "sqlite3", "2.7.3"
+gem "sqlite3", "2.7.4"
 
 group :development do
   gem "appraisal"
