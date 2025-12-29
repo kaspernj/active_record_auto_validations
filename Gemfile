@@ -10,7 +10,7 @@ group :development do
   gem "appraisal"
   gem "dotenv-rails"
   gem "mysql2"
-  gem "nokogiri", "1.18.10"
+  gem "nokogiri", "1.19.0"
   gem "pry-rails"
   gem "rspec-rails"
   gem "rubocop"
