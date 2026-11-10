@@ -1,0 +1,111 @@
+# Path filters for the four build lanes (STOE-1255).
+#
+# `**` first, so an unknown path always runs the lane: the filter only ever skips
+# a path this repository proves no lane consumes. The quoted `!` negations are
+# that proven set.
+#
+# The Linters lane runs bare `bundle exec rubocop`, so its file set is exactly
+# what `rubocop --list-target-files` names with the Gemfile.lock pin (rubocop
+# 1.84.2 + rubocop-performance/rails/rspec): 53 files — Appraisals, Gemfile,
+# Rakefile, the gemspec, app/**, bin/rails, config/routes.rb,
+# gemfiles/ruby_3.gemfile, lib/** and spec/** including spec/dummy/**.
+# `spec/dummy/db/schema.rb` is excluded by .rubocop.yml.
+#
+# The three test lanes run `bundle exec appraisal "ruby 3" rspec`, which reads
+# none of the negated paths: rspec loads spec/**/*_spec.rb plus spec/rails_helper.rb,
+# which boots spec/dummy (so spec/dummy/** stays in), and the engine under test is
+# app/** + lib/** + config/routes.rb. Root `Rakefile` is only reached through
+# `rake`, which no lane runs, and `.rubocop.yml` is only read by the lint lane —
+# both are still in the Linters lane's paths. `!/Rakefile` is anchored at the
+# repo root so `spec/dummy/Rakefile` is not carved out.
+#
+# README.md, MIT-LICENSE, .github/dependabot.yml and .gitignore are in no lane's
+# file set. RuboCop does not consult .gitignore — measured 2026-11-09 by appending
+# `lib/**` to it in a ruby:3.3.5 container: the target list stayed the same 53 files.
+#
+# Lockfiles stay broad in every lane even though the three appraisal lanes resolve
+# `gemfiles/ruby_3.gemfile.lock` while the Linters lane resolves `Gemfile.lock`
+# (proved with `Bundler.default_lockfile` under each lane's BUNDLE_GEMFILE): a
+# root lockfile change is a shared-tooling change, so it runs every build.
+#
+# Negations must stay quoted: an unquoted `!glob` is parsed as a YAML tag with no
+# value, so the rule silently vanishes. spec/tensorbuzz_config_spec.rb asserts the
+# parsed shape for exactly that reason.
+#
+# Everything uncertain still builds: a change to tensorbuzz.yml or peak_flow.yml,
+# a missing, empty or capped changed-path list, and a manual rebuild of a lane
+# that was skipped. Whether a skip acts is the project's `path_filter_mode`
+# (`off` / `shadow` / `enforce`), not something this file decides.
+rvm: true
+before_script:
+  - cp .env.peakflow .env.local
+  - wait-for-it mariadb:3306
+  - cd spec/dummy && bundle exec rails db:environment:set db:create db:schema:load RAILS_ENV=test
+services:
+  mariadb:
+    environment:
+      MARIADB_USER: peakflow
+      MARIADB_PASSWORD: password
+      MARIADB_ROOT_PASSWORD: password
+      MARIADB_DATABASE: active_record_auto_validations_test
+    image: mariadb:latest
+    expose:
+      - 3306
+    mem_limit: 4096m
+    restart_policy: always
+builds:
+  build_1:
+    environment:
+      BUNDLE_GEMFILE: /home/build/project/gemfiles/ruby_3.gemfile
+      RUBY_VERSION: 3.2.7
+    name: Ruby 3.2.7
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!MIT-LICENSE"
+      - "!.rubocop.yml"
+      - "!/Rakefile"
+    script:
+      - bundle exec appraisal "ruby 3" rspec
+  build_2:
+    environment:
+      BUNDLE_GEMFILE: /home/build/project/gemfiles/ruby_3.gemfile
+      RUBY_VERSION: 3.3.7
+    name: Ruby 3.3.7
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!MIT-LICENSE"
+      - "!.rubocop.yml"
+      - "!/Rakefile"
+    script:
+      - bundle exec appraisal "ruby 3" rspec
+  build_3:
+    environment:
+      BUNDLE_GEMFILE: /home/build/project/gemfiles/ruby_3.gemfile
+      RUBY_VERSION: 3.4.2
+    name: Ruby 3.4.2
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!MIT-LICENSE"
+      - "!.rubocop.yml"
+      - "!/Rakefile"
+    script:
+      - bundle exec appraisal "ruby 3" rspec
+  build_4:
+    name: Linters
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!.github/**"
+      - "!.gitignore"
+      - "!MIT-LICENSE"
+    script:
+      - bundle exec rubocop
