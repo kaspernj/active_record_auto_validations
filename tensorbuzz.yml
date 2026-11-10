@@ -28,9 +28,10 @@
 # (proved with `Bundler.default_lockfile` under each lane's BUNDLE_GEMFILE): a
 # root lockfile change is a shared-tooling change, so it runs every build.
 #
-# Negations must stay quoted: an unquoted `!glob` is parsed as a YAML tag with no
-# value, so the rule silently vanishes. spec/tensorbuzz_config_spec.rb asserts the
-# parsed shape for exactly that reason.
+# Negations must stay quoted: TensorBuzz parses this file with js-yaml, and an unquoted
+# `!glob` is read as a scalar tag — `unknown scalar tag !<!MIT-LICENSE>` — so the whole
+# config fails to load. Ruby's Psych is quieter and parses it as nil, so the rule just
+# vanishes. spec/tensorbuzz_config_spec.rb asserts the parsed shape for that reason.
 #
 # Everything uncertain still builds: a change to tensorbuzz.yml or peak_flow.yml,
 # a missing, empty or capped changed-path list, and a manual rebuild of a lane
